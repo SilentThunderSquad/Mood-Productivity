@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MoodFlow — Tasks</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="bg-noise"></div>
+
+  <nav class="nav">
+    <div class="nav-brand"><span>🧠</span> MoodFlow</div>
+    <ul class="nav-links">
+      <li><a href="dashboard.html"><span class="ico">📊</span> Dashboard</a></li>
+      <li><a href="mood-detection.html"><span class="ico">💬</span> Check-In</a></li>
+      <li><a href="tasks.html" class="active"><span class="ico">✅</span> Tasks</a></li>
+      <li><a href="focus-mode.html"><span class="ico">🎯</span> Focus</a></li>
+    </ul>
+    <div class="nav-user">
+      <div class="nav-avatar" id="navAvatar">U</div>
+      <button class="btn-logout" onclick="doLogout()">Logout</button>
+    </div>
+    <button class="nav-hamburger" onclick="toggleMobileMenu()">
+      <span></span><span></span><span></span>
+    </button>
+  </nav>
+
+  <div class="nav-mobile-menu" id="mobileMenu">
+    <a href="dashboard.html">📊 Dashboard</a>
+    <a href="mood-detection.html">💬 Check-In</a>
+    <a href="tasks.html">✅ Tasks</a>
+    <a href="focus-mode.html">🎯 Focus Mode</a>
+    <a href="#" onclick="doLogout()" style="color:var(--stressed)">⏻ Logout</a>
+  </div>
+
+  <div class="page-wrapper">
+    <div class="tasks-page">
+      <div class="tasks-header">
+        <h2 style="font-size: 2.25rem; letter-spacing: -0.02em; background: linear-gradient(135deg, var(--text), var(--text-muted)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">✅ My Tasks</h2>
+        <button class="btn-add-task" onclick="openModal()" style="box-shadow: var(--glow-accent);">+ Add Task</button>
+      </div>
+
+      <div class="filter-bar">
+        <button class="filter-btn active" data-filter="all" onclick="setFilter('all', this)">All</button>
+        <button class="filter-btn" data-filter="pending" onclick="setFilter('pending', this)">Pending</button>
+        <button class="filter-btn" data-filter="completed" onclick="setFilter('completed', this)">Completed</button>
+        <button class="filter-btn" data-filter="Easy" onclick="setFilter('Easy', this)">🟢 Easy</button>
+        <button class="filter-btn" data-filter="Medium" onclick="setFilter('Medium', this)">🔵 Medium</button>
+        <button class="filter-btn" data-filter="Hard" onclick="setFilter('Hard', this)">🔴 Hard</button>
+      </div>
+
+      <div id="tasksList" class="tasks-grid">
+        <div class="skeleton" style="height:68px"></div>
+        <div class="skeleton" style="height:68px"></div>
+        <div class="skeleton" style="height:68px"></div>
+        <div class="skeleton" style="height:68px"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add/Edit Task Modal -->
+  <div class="modal-overlay" id="taskModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 id="modalTitle">Add New Task</h3>
+        <button class="btn-close" onclick="closeModal()">✕</button>
+      </div>
+      <input type="hidden" id="editTaskId">
+
+      <div class="form-group">
+        <label>Task Title *</label>
+        <input type="text" id="taskTitle" placeholder="What needs to be done?">
+      </div>
+      <div class="form-group">
+        <label>Description</label>
+        <textarea id="taskDesc" placeholder="Optional details..."></textarea>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Difficulty</label>
+          <select id="taskDiff">
+            <option value="Easy">🟢 Easy</option>
+            <option value="Medium" selected>🔵 Medium</option>
+            <option value="Hard">🔴 Hard</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Deadline</label>
+          <input type="date" id="taskDeadline">
+        </div>
+      </div>
+      <button class="btn-primary" onclick="saveTask()">Save Task</button>
+    </div>
+  </div>
+
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script src="js/auth.js"></script>
+  <script src="js/tasks.js"></script>
+  <script>
+    requireAuth();
+    loadTasks();
+  </script>
+</body>
+</html>

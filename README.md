@@ -1,6 +1,6 @@
 # 💬 MoodFlow — Mood-Based Productivity App
 
-A productivity application that assesses your emotional state through a short daily check-in quiz and recommends tasks aligned with your mood.
+A premium "Neural Dark" productivity application that assesses your emotional state through a short daily check-in quiz and recommends tasks aligned with your mood. Built for speed and visual excellence.
 
 ---
 
@@ -8,24 +8,24 @@ A productivity application that assesses your emotional state through a short da
 
 | Feature | Description |
 |---|---|
-| 💬 **Daily Mood Check-In** | Quiz-based mood assessment (no camera required) |
-| 🎯 **Smart Recommendations** | Tasks filtered by mood + difficulty + urgency |
-| ✅ **Task Management** | Full CRUD with difficulty levels and deadlines |
-| 📊 **Productivity Score** | Formula-based scoring with bonuses |
-| 📈 **Charts & Analytics** | Chart.js visualisations for mood and tasks |
-| 🎯 **Focus Mode** | Mood-adaptive Pomodoro-style timer |
-| 🔐 **Auth** | JWT + bcrypt secure authentication |
+| 💬 **Daily Mood Check-In** | AI-driven quiz assessment with instant mood derivation |
+| 🎯 **Smart Recommendations** | Tasks filtered dynamically by mood, difficulty, and urgency |
+| ✅ **Task Management** | Full CRUD with difficulty levels, deadlines, and glassmorphic UI |
+| 📊 **Productivity Score** | Formula-based progressive scoring with mood bonuses |
+| 📈 **Advanced Analytics** | Real-time Chart.js visualisations for mood trends and completion |
+| 🎯 **Focus Mode** | Premium Pomodoro-style timer with mood-adaptive durations |
+| 🔐 **Secure Auth** | Supabase-powered JWT + bcrypt authentication |
 
 ---
 
 ## 🏗️ Architecture
 
 ```
-Client (Browser)
-    ↕  HTTP / REST
-FastAPI Backend
+Client (Browser / Vanilla JS)
+    ↕  HTTPS / REST
+FastAPI Backend (Python)
     ↕
-MongoDB Database
+Supabase (PostgreSQL + Auth)
 ```
 
 ---
@@ -36,46 +36,25 @@ MongoDB Database
 mood-productivity-app/
 │
 ├── backend/
-│   ├── main.py                    # FastAPI entry point
-│   ├── database.py                # MongoDB connection
-│   ├── auth.py                    # JWT + bcrypt auth
-│   ├── mood_quiz_engine.py        # Quiz-based mood derivation
-│   ├── recommendation_engine.py   # Mood-based task suggestions
-│   ├── analytics_engine.py        # Productivity scoring + insights
-│   ├── requirements.txt
-│   ├── .env.example
-│   │
-│   ├── routes/
-│   │   ├── auth_routes.py         # /register /login /logout
-│   │   ├── task_routes.py         # CRUD tasks
-│   │   ├── mood_routes.py         # /mood-questions /assess-mood /mood-history
-│   │   └── analytics_routes.py   # /productivity-score /mood-analytics /weekly-report
-│   │
-│   ├── models/
-│   │   ├── user_model.py
-│   │   ├── task_model.py
-│   │   └── mood_model.py
-│   │
-│   └── utils/
-│       ├── productivity_score.py
-│       └── mood_analysis.py
+│   ├── main.py                    # FastAPI entry point & Routing
+│   ├── database.py                # Supabase Connection Manager
+│   ├── routes/                    # API Route Handlers
+│   ├── models/                    # Data Schemas
+│   ├── requirements.txt           # Python Dependencies
+│   └── .env                       # Cloud Credentials
 │
-└── frontend/
-    ├── login.html
-    ├── register.html
-    ├── dashboard.html
-    ├── tasks.html
-    ├── mood-detection.html
-    ├── focus-mode.html
-    │
-    ├── css/
-    │   └── style.css              # Fully responsive dark UI
-    │
-    └── js/
-        ├── auth.js                # Login/register/logout + shared utils
-        ├── tasks.js               # Task CRUD operations
-        ├── mood_detection.js      # Mood check-in helpers
-        └── charts.js              # Dashboard + Chart.js
+├── frontend/                  # Static assets
+│   ├── login.html
+│   ├── register.html
+│   ├── dashboard.html
+│   ├── tasks.html
+│   ├── mood-detection.html
+│   ├── focus-mode.html
+│   ├── css/style.css              # Premium "Neural Dark" Design System
+│   └── js/                        # Shared Logic (Auth, Charts, Tasks)
+│
+├── vercel.json                    # Vercel Deployment Config
+└── DEPLOY.md                      # Cloud Hosting Guide
 ```
 
 ---
@@ -83,125 +62,60 @@ mood-productivity-app/
 ## ⚙️ Setup Instructions
 
 ### 1. Prerequisites
+- **Python 3.9+**
+- **Supabase Account** (Free tier works perfectly)
+- A modern browser
 
-- Python 3.9+
-- MongoDB (Community Edition)
-- Modern browser (Chrome / Firefox recommended)
+### 2. Database Setup (Supabase)
+1. Create a new project on [Supabase](https://supabase.com).
+2. Grab your **Project URL** and **API Key** from the Supabase Project Settings.
+3. Add these to your `.env` file in the `backend/` folder.
 
----
-
-### 2. Install MongoDB
-
-**macOS (Homebrew):**
-```bash
-brew tap mongodb/brew
-brew install mongodb-community
-brew services start mongodb-community
-```
-
-**Ubuntu/Debian:**
-```bash
-sudo apt install mongodb
-sudo systemctl start mongodb
-```
-
-**Windows:**
-Download from https://www.mongodb.com/try/download/community
-
----
-
-### 3. Backend Setup
+### 3. Local Setup
 
 ```bash
 # Navigate to backend directory
-cd mood-productivity-app/backend
+cd backend
 
-# Create virtual environment (recommended)
+# Create and activate virtual environment
 python -m venv venv
-source venv/bin/activate        # macOS/Linux
-# venv\Scripts\activate         # Windows
+# Windows:
+.\venv\Scripts\activate
+# macOS/Linux:
+source venv/bin/activate
 
 # Install dependencies
 pip install -r requirements.txt
 
-# Copy and configure environment variables
-cp .env.example .env
-# Edit .env if needed (MongoDB URI, SECRET_KEY)
+# Configure environment variables (.env)
+SUPABASE_URL="your-supabase-url"
+SUPABASE_KEY="your-supabase-anon-key"
+SECRET_KEY="your-jwt-secret"
 
-# Start the FastAPI server
-uvicorn main:app --reload --port 8000
+# Start the server
+uvicorn main:app --reload
 ```
 
-The API will be available at: **http://localhost:8000**
-API documentation (Swagger UI): **http://localhost:8000/docs**
+The app will be available locally at: **http://localhost:8000**
 
 ---
 
-### 4. Frontend Setup
+## 🚀 Deployment (Vercel)
 
-The frontend is pure HTML/CSS/JS — no build step required.
+This project is optimized for **Vercel**. 
+1. Push this project to GitHub.
+2. Link the repository to Vercel.
+3. Add your `.env` variables in the Vercel Dashboard.
 
-**Option A: Serve via FastAPI (recommended)**
-FastAPI automatically serves the frontend at **http://localhost:8000**
-
-**Option B: Use VS Code Live Server extension**
-Right-click login.html -> Open with Live Server
-
----
-
-### 5. First Run
-
-1. Open **http://localhost:8000**
-2. Click **"Create one"** to register an account
-3. Login to reach the dashboard
-4. Go to **Check-In** -> Answer the short quiz -> Submit
-5. View recommendations on the dashboard!
+See [DEPLOY.md](DEPLOY.md) for a detailed walkthrough.
 
 ---
 
-## 🔌 API Reference
-
-### Authentication
-| Method | Endpoint | Description |
-|---|---|---|
-| POST | /api/register | Register new user |
-| POST | /api/login | Login and receive JWT |
-| POST | /api/logout | Clear auth cookie |
-| GET | /api/me | Get current user |
-
-### Mood Check-In
-| Method | Endpoint | Description |
-|---|---|---|
-| GET | /api/mood-questions | Get quiz questions |
-| POST | /api/assess-mood | Submit answers and get mood result |
-| GET | /api/mood-history | Get past mood records |
-
-### Tasks
-| Method | Endpoint | Description |
-|---|---|---|
-| POST | /api/task | Create task |
-| GET | /api/tasks | Get all user tasks |
-| PUT | /api/task/{id} | Update task |
-| DELETE | /api/task/{id} | Delete task |
-| PUT | /api/task/complete/{id} | Mark task as completed |
-
-### Analytics
-| Method | Endpoint | Description |
-|---|---|---|
-| GET | /api/productivity-score | Calculate score |
-| GET | /api/mood-analytics | Mood distribution + insights |
-| GET | /api/weekly-report | 7-day summary |
-
----
-
-## 😊 Mood to Task Mapping
-
-| Mood | Recommended Tasks |
-|---|---|
-| motivated 🚀 | Hard -> Medium |
-| neutral 😐 | Medium -> Easy |
-| tired 😴 | Easy only |
-| stressed 😰 | Easy -> Medium |
+## 🎨 Design Aesthetic
+MoodFlow uses a custom **"Neural Dark"** design system featuring:
+- **Glassmorphism**: Backdrop blur and soft glows on all major components.
+- **Vibrant Gradients**: Luminous mood-based colors (Indigo, Emerald, Violet).
+- **Responsive Simplicity**: Built with Vanilla CSS for maximum performance.
 
 ---
 
@@ -212,44 +126,25 @@ Base Score = (completed_tasks / total_tasks) x 100
 
 Bonuses:
   +10 for each completed Hard task
-  +5  for each task completed while in stressed mood
+  +5  for each task completed while in a "Stressed" mood
 
-Final Score = Base Score + Total Bonuses  (capped at 150%)
+Final Score = Base Score + Total Bonuses (Capped at 150%)
 ```
 
 ---
 
-## 🎨 Tech Stack
+## 🛠️ Tech Stack
 
 | Layer | Technology |
 |---|---|
-| Frontend | HTML5, CSS3, Vanilla JavaScript |
-| Charts | Chart.js 4.x |
-| Backend | Python + FastAPI + Uvicorn |
-| Database | MongoDB + PyMongo |
-| Auth | JWT (python-jose) + bcrypt (passlib) |
-
----
-
-## 🛠️ Troubleshooting
-
-**MongoDB connection refused:**
-```bash
-# Check if MongoDB is running
-mongosh --eval "db.runCommand({ connectionStatus: 1 })"
-# Start it
-sudo systemctl start mongod   # Linux
-brew services start mongodb-community  # macOS
-```
-
-**CORS errors in browser:**
-Make sure you're accessing the frontend through http://localhost:8000 (served by FastAPI), not a different port.
+| **Frontend** | HTML5, Vanilla JavaScript, CSS3 (Custom Design System) |
+| **Charts** | Chart.js 4.x |
+| **Backend** | Python 3.x, FastAPI, Uvicorn |
+| **Database** | Supabase (PostgreSQL) |
+| **Deployment** | Vercel (Serverless Functions) |
 
 ---
 
 ## 👥 Contributors
 
-Built as an academic project demonstrating:
-- Quiz-Based Mood Assessment
-- Full-Stack Web Development (FastAPI + Vanilla JS)
-- Data Analytics (Productivity Scoring + Mood Trends)
+Built with focus on AI-driven productivity and modern web aesthetics.

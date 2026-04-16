@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MoodFlow — Daily Check-In</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    /* ── Quiz-specific styles ── */
+    .quiz-wrap {
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem 4rem;
+    }
+
+    .quiz-header {
+      text-align: center;
+      margin-bottom: 3rem;
+      position: relative;
+    }
+    .quiz-header h2 {
+      font-size: 2.25rem;
+      letter-spacing: -0.02em;
+      margin-bottom: .6rem;
+      background: linear-gradient(135deg, var(--text), var(--text-dim));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .quiz-header p {
+      color: var(--text-muted);
+      font-size: 1rem;
+      max-width: 500px;
+      margin: 0 auto;
+    }
+
+    /* Progress bar */
+    .quiz-progress {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+    .progress-track {
+      flex: 1;
+      height: 6px;
+      background: var(--surface);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      border-radius: 3px;
+      transition: width .5s cubic-bezier(.4,0,.2,1);
+    }
+    .progress-label {
+      font-size: .78rem;
+      color: var(--text-muted);
+      white-space: nowrap;
+      font-weight: 600;
+    }
+
+    /* Question card */
+    .question-card {
+      background: rgba(11, 14, 20, 0.4);
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 2.5rem 2.5rem 2rem;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.3), inset 0 0 20px rgba(108,143,248,0.02);
+      animation: fadeUp .5s cubic-bezier(.16,1,.3,1);
+    }
+
+    .question-emoji {
+      font-size: 2.5rem;
+      display: block;
+      margin-bottom: .75rem;
+      text-align: center;
+    }
+    .question-text {
+      font-family: var(--font-display);
+      font-size: 1.35rem;
+      font-weight: 700;
+      text-align: center;
+      margin-bottom: 1.75rem;
+      line-height: 1.4;
+    }
+
+    /* Answer options */
+    .options-grid {
+      display: flex;
+      flex-direction: column;
+      gap: .75rem;
+    }
+    .option-btn {
+      display: flex;
+      align-items: center;
+      gap: 1.15rem;
+      padding: 1.15rem 1.5rem;
+      background: rgba(26, 31, 46, 0.4);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      cursor: pointer;
+      transition: all .25s cubic-bezier(.4,0,.2,1);
+      text-align: left;
+      width: 100%;
+      font-family: var(--font-body);
+      color: var(--text-muted);
+      font-size: 1rem;
+      font-weight: 500;
+      position: relative;
+    }
+    .option-btn:hover {
+      border-color: var(--accent);
+      background: rgba(99, 102, 241, 0.08);
+      color: var(--text);
+      transform: translateX(6px);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+    }
+    .option-btn.selected {
+      border-color: var(--accent);
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(139, 92, 246, 0.1));
+      color: var(--text);
+      box-shadow: var(--glow-accent);
+    }
+    .option-letter {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: .8rem;
+      flex-shrink: 0;
+      transition: all .2s;
+    }
+    .option-btn.selected .option-letter {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+
+    /* Navigation */
+    .quiz-nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 1.75rem;
+      gap: 1rem;
+    }
+    .btn-quiz-nav {
+      display: inline-flex;
+      align-items: center;
+      gap: .5rem;
+      padding: .7rem 1.5rem;
+      border-radius: 50px;
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: .875rem;
+      cursor: pointer;
+      transition: all .25s;
+      border: none;
+    }
+    .btn-quiz-nav.prev {
+      background: var(--surface);
+      color: var(--text-muted);
+      border: 1px solid var(--border);
+    }
+    .btn-quiz-nav.prev:hover { color: var(--text); border-color: var(--accent); }
+    .btn-quiz-nav.next {
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: #fff;
+      margin-left: auto;
+    }
+    .btn-quiz-nav.next:hover { transform: scale(1.04); box-shadow: var(--glow); }
+    .btn-quiz-nav.next:disabled {
+      opacity: .4;
+      cursor: not-allowed;
+      transform: none;
+    }
+    .btn-quiz-nav.submit {
+      background: linear-gradient(135deg, var(--motivated), #16a34a);
+      color: #fff;
+      padding: .8rem 2rem;
+      font-size: 1rem;
+      margin-left: auto;
+    }
+    .btn-quiz-nav.submit:hover { transform: scale(1.04); box-shadow: 0 0 24px rgba(34,197,94,.3); }
+    .btn-quiz-nav.submit:disabled {
+      background: var(--surface) !important;
+      background-image: none !important;
+      color: var(--text-muted) !important;
+      border: 1px solid var(--border) !important;
+      opacity: .6;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    /* Dots indicator */
+    .quiz-dots {
+      display: flex;
+      gap: .4rem;
+      align-items: center;
+    }
+    .quiz-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 5px;
+      background: var(--surface2);
+      transition: all .4s cubic-bezier(.16,1,.3,1);
+    }
+    .quiz-dot.done  { background: var(--accent); opacity: .6; }
+    .quiz-dot.active {
+      background: var(--accent);
+      width: 28px;
+      box-shadow: var(--glow-accent);
+    }
+
+    /* ── Results panel ── */
+    .result-panel {
+      display: none;
+      animation: fadeUp .5s ease;
+    }
+    .result-panel.show { display: block; }
+
+    .result-hero {
+      background: rgba(11, 14, 20, 0.4);
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--border);
+      border-radius: 28px;
+      padding: 3.5rem 2rem;
+      text-align: center;
+      margin-bottom: 2rem;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 30px 60px rgba(0,0,0,0.4);
+    }
+    .result-hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 50% -20%, rgba(99, 102, 241, 0.15), transparent 70%);
+    }
+    .result-big-emoji {
+      font-size: 5rem;
+      display: block;
+      margin-bottom: 1rem;
+      animation: pulse 2.5s ease-in-out infinite;
+      position: relative;
+    }
+    .result-mood-name {
+      font-size: 2.5rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: .5rem;
+    }
+    .result-desc {
+      color: var(--text-muted);
+      font-size: 1.1rem;
+      max-width: 500px;
+      margin: 0 auto 2.5rem;
+      position: relative;
+      line-height: 1.6;
+    }
+
+    /* Score bars */
+    .score-bars {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: .75rem;
+      max-width: 440px;
+      margin: 0 auto;
+      position: relative;
+    }
+    .score-bar-item {
+      background: rgba(26, 31, 46, 0.4);
+      border: 1px solid var(--border2);
+      border-radius: 12px;
+      padding: 1rem 1.25rem;
+      transition: transform .3s;
+    }
+    .score-bar-item:hover { transform: translateY(-4px); border-color: var(--accent); }
+    .score-bar-label {
+      font-size: .75rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      font-weight: 600;
+      margin-bottom: .5rem;
+    }
+    .score-bar-track {
+      height: 6px;
+      background: var(--surface);
+      border-radius: 3px;
+      overflow: hidden;
+      margin-bottom: .35rem;
+    }
+    .score-bar-fill {
+      height: 100%;
+      border-radius: 3px;
+      transition: width 1.2s cubic-bezier(.4,0,.2,1);
+    }
+    .score-bar-val {
+      font-size: .8rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    /* Insight cards */
+    .insights-section {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      margin-bottom: 1.25rem;
+    }
+    .insights-section h3 {
+      font-size: 1rem;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+    }
+
+    /* Recommendations */
+    .rec-section {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      margin-bottom: 1.25rem;
+    }
+    .rec-section h3 {
+      font-size: 1rem;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+    }
+
+    .redo-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: .5rem;
+      width: 100%;
+      padding: .85rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text-muted);
+      font-family: var(--font-display);
+      font-weight: 600;
+      font-size: .9rem;
+      cursor: pointer;
+      transition: all .2s;
+      margin-top: 1rem;
+    }
+    .redo-btn:hover { color: var(--text); border-color: var(--accent); }
+
+    /* Loading overlay */
+    .quiz-loading {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 1.25rem;
+      padding: 4rem 2rem;
+      text-align: center;
+    }
+    .quiz-loading.show { display: flex; }
+    .quiz-loading p { color: var(--text-muted); font-size: .95rem; }
+
+    @media (max-width: 600px) {
+      .question-text { font-size: 1.1rem; }
+      .score-bars { grid-template-columns: 1fr; }
+      .question-card { padding: 1.5rem 1.25rem 1.25rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-noise"></div>
+
+  <nav class="nav">
+    <div class="nav-brand"><span>🧠</span> MoodFlow</div>
+    <ul class="nav-links">
+      <li><a href="dashboard.html"><span class="ico">📊</span> Dashboard</a></li>
+      <li><a href="mood-detection.html" class="active"><span class="ico">💬</span> Check-In</a></li>
+      <li><a href="tasks.html"><span class="ico">✅</span> Tasks</a></li>
+      <li><a href="focus-mode.html"><span class="ico">🎯</span> Focus</a></li>
+    </ul>
+    <div class="nav-user">
+      <div class="nav-avatar" id="navAvatar">U</div>
+      <button class="btn-logout" onclick="doLogout()">Logout</button>
+    </div>
+    <button class="nav-hamburger" onclick="toggleMobileMenu()">
+      <span></span><span></span><span></span>
+    </button>
+  </nav>
+
+  <div class="nav-mobile-menu" id="mobileMenu">
+    <a href="dashboard.html">📊 Dashboard</a>
+    <a href="mood-detection.html">💬 Check-In</a>
+    <a href="tasks.html">✅ Tasks</a>
+    <a href="focus-mode.html">🎯 Focus Mode</a>
+    <a href="#" onclick="doLogout()" style="color:var(--stressed)">⏻ Logout</a>
+  </div>
+
+  <div class="page-wrapper">
+    <div class="quiz-wrap">
+
+      <!-- Header -->
+      <div class="quiz-header fade-in">
+        <h2>💬 Daily Mood Check-In</h2>
+        <p>Answer a few quick questions so we can personalise your task recommendations</p>
+      </div>
+
+      <!-- Loading state -->
+      <div class="quiz-loading" id="quizLoading">
+        <div class="spinner"></div>
+        <p>Analysing your responses...</p>
+      </div>
+
+      <!-- Quiz section -->
+      <div id="quizSection">
+        <!-- Progress -->
+        <div class="quiz-progress fade-in">
+          <div class="progress-track">
+            <div class="progress-fill" id="progressFill" style="width:0%"></div>
+          </div>
+          <span class="progress-label" id="progressLabel">0 / 7</span>
+        </div>
+
+        <!-- Dots -->
+        <div class="quiz-dots" id="quizDots" style="justify-content:center;margin-bottom:1.5rem"></div>
+
+        <!-- Question card -->
+        <div class="question-card" id="questionCard">
+          <span class="question-emoji" id="qEmoji">❓</span>
+          <div class="question-text" id="qText">Loading...</div>
+          <div class="options-grid" id="optionsGrid"></div>
+          <div class="quiz-nav">
+            <button class="btn-quiz-nav prev" id="btnPrev" onclick="prevQuestion()" style="display:none">← Back</button>
+            <button class="btn-quiz-nav next" id="btnNext" onclick="nextQuestion()" disabled>Next →</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Results section (hidden initially) -->
+      <div class="result-panel" id="resultPanel">
+
+        <div class="result-hero">
+          <span class="result-big-emoji" id="resEmoji">😐</span>
+          <div class="result-mood-name" id="resMoodName">Neutral</div>
+          <p class="result-desc" id="resDesc">Loading description...</p>
+
+          <!-- Score bars -->
+          <div class="score-bars">
+            <div class="score-bar-item">
+              <div class="score-bar-label">⚡ Energy</div>
+              <div class="score-bar-track">
+                <div class="score-bar-fill" id="barEnergy" style="width:0%;background:#f59e0b"></div>
+              </div>
+              <div class="score-bar-val" id="valEnergy">0/10</div>
+            </div>
+            <div class="score-bar-item">
+              <div class="score-bar-label">🎯 Focus</div>
+              <div class="score-bar-track">
+                <div class="score-bar-fill" id="barFocus" style="width:0%;background:#60a5fa"></div>
+              </div>
+              <div class="score-bar-val" id="valFocus">0/10</div>
+            </div>
+            <div class="score-bar-item">
+              <div class="score-bar-label">🧠 Stress</div>
+              <div class="score-bar-track">
+                <div class="score-bar-fill" id="barStress" style="width:0%;background:#f87171"></div>
+              </div>
+              <div class="score-bar-val" id="valStress">0/10</div>
+            </div>
+            <div class="score-bar-item">
+              <div class="score-bar-label">😊 Mood Boost</div>
+              <div class="score-bar-track">
+                <div class="score-bar-fill" id="barMood" style="width:0%;background:#22c55e"></div>
+              </div>
+              <div class="score-bar-val" id="valMood">—</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Insights -->
+        <div class="insights-section">
+          <h3>🧠 AI Insights</h3>
+          <div class="insight-list" id="insightsList"></div>
+          <div class="tip-banner" id="tipBanner" style="margin-top:1rem">
+            <span class="tip-icon">💡</span>
+            <span id="tipText"></span>
+          </div>
+        </div>
+
+        <!-- Recommended tasks -->
+        <div class="rec-section" id="recSection">
+          <h3>🎯 Recommended Tasks For You</h3>
+          <div class="tasks-grid" id="recTasksList"></div>
+        </div>
+
+        <!-- Urgent tasks -->
+        <div class="rec-section" id="urgSection" style="display:none">
+          <h3>⚠️ Urgent Tasks (Due Soon)</h3>
+          <div class="tasks-grid" id="urgTasksList"></div>
+        </div>
+
+        <!-- Focus time suggestion -->
+        <div class="tip-banner" id="focusBanner" style="margin-bottom:1.5rem">
+          <span class="tip-icon">⏱️</span>
+          <span id="focusText"></span>
+        </div>
+
+        <button class="redo-btn" onclick="restartQuiz()">🔄 Retake Check-In</button>
+        <a href="dashboard.html" style="display:block;margin-top:.75rem">
+          <button class="btn-primary" style="margin-top:0">Go to Dashboard →</button>
+        </a>
+
+      </div><!-- /result-panel -->
+
+    </div>
+  </div>
+
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script src="js/auth.js"></script>
+  <script>
+    requireAuth();
+
+    // ── State ────────────────────────────────────────────────
+    let questions   = [];
+    let currentIdx  = 0;
+    let answers     = {};   // { q1: {value, label}, ... }
+
+    // ── Bootstrap ────────────────────────────────────────────
+    async function loadQuestions() {
+      try {
+        const res  = await apiFetch(`${API}/mood-questions`);
+        const data = await res.json();
+        questions  = data.questions || [];
+        buildDots();
+        showQuestion(0);
+      } catch (e) {
+        showToast('Failed to load questions: ' + e.message, 'error');
+      }
+    }
+
+    // ── Dots ─────────────────────────────────────────────────
+    function buildDots() {
+      const el = document.getElementById('quizDots');
+      el.innerHTML = questions.map((_, i) =>
+        `<div class="quiz-dot" id="dot-${i}"></div>`
+      ).join('');
+    }
+
+    function updateDots() {
+      questions.forEach((_, i) => {
+        const dot = document.getElementById(`dot-${i}`);
+        if (!dot) return;
+        dot.className = 'quiz-dot' +
+          (i < currentIdx   ? ' done'   : '') +
+          (i === currentIdx ? ' active' : '');
+      });
+    }
+
+    // ── Show question ─────────────────────────────────────────
+    function showQuestion(idx) {
+      if (!questions.length) return;
+      currentIdx = idx;
+      const q = questions[idx];
+
+      document.getElementById('qEmoji').textContent = q.emoji;
+      document.getElementById('qText').textContent  = q.text;
+
+      const letters = ['A','B','C','D'];
+      document.getElementById('optionsGrid').innerHTML = q.options.map((opt, i) => `
+        <button class="option-btn ${answers[q.id]?.value === opt.value ? 'selected' : ''}"
+                onclick="selectOption('${q.id}', '${opt.value}', '${opt.label.replace(/'/g,"\\'")}', this)">
+          <span class="option-letter">${letters[i]}</span>
+          <span>${opt.label}</span>
+        </button>
+      `).join('');
+
+      // Progress (immediate update)
+      const answeredCount = Object.keys(answers).length;
+      const pct = Math.round((answeredCount / questions.length) * 100);
+      document.getElementById('progressFill').style.width  = pct + '%';
+      document.getElementById('progressLabel').textContent = `${answeredCount} / ${questions.length}`;
+
+      // Buttons
+      document.getElementById('btnPrev').style.display = idx === 0 ? 'none' : 'inline-flex';
+
+      const isLast    = idx === questions.length - 1;
+      const navEl     = document.getElementById('btnNext');
+      const hasAnswer = !!answers[q.id];
+
+      // Reset button state
+      navEl.disabled  = !hasAnswer;
+      if (isLast) {
+        navEl.textContent = '✨ See My Results';
+        navEl.className   = 'btn-quiz-nav submit';
+        navEl.onclick     = submitQuiz;
+      } else {
+        navEl.textContent = 'Next →';
+        navEl.className   = 'btn-quiz-nav next';
+        navEl.onclick     = nextQuestion;
+      }
+
+      updateDots();
+
+      // Animate card
+      const card = document.getElementById('questionCard');
+      card.style.opacity = '0';
+      card.style.transform = 'translateY(12px)';
+      requestAnimationFrame(() => {
+        card.style.transition = 'all .3s ease';
+        card.style.opacity    = '1';
+        card.style.transform  = 'translateY(0)';
+      });
+    }
+
+    // ── Select option ─────────────────────────────────────────
+    function selectOption(qId, value, label, btn) {
+      answers[qId] = { value, label };
+
+      // Update UI
+      document.querySelectorAll('.option-btn').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+
+      // Enable next/submit button & update progress
+      const nextBtn = document.getElementById('btnNext');
+      if (nextBtn) nextBtn.disabled = false;
+
+      const answeredCount = Object.keys(answers).length;
+      const pct = Math.round((answeredCount / questions.length) * 100);
+      document.getElementById('progressFill').style.width  = pct + '%';
+      document.getElementById('progressLabel').textContent = `${answeredCount} / ${questions.length}`;
+
+      // Auto-advance after short delay
+      setTimeout(() => {
+        const isLast = currentIdx === questions.length - 1;
+        if (!isLast) nextQuestion();
+      }, 420);
+    }
+
+    // ── Navigation ────────────────────────────────────────────
+    function nextQuestion() {
+      const q = questions[currentIdx];
+      if (!answers[q.id]) { showToast('Please select an option', 'error'); return; }
+      if (currentIdx < questions.length - 1) showQuestion(currentIdx + 1);
+    }
+
+    function prevQuestion() {
+      if (currentIdx > 0) showQuestion(currentIdx - 1);
+    }
+
+    // ── Submit ────────────────────────────────────────────────
+    async function submitQuiz() {
+      // Check all answered
+      const unanswered = questions.filter(q => !answers[q.id]);
+      if (unanswered.length) {
+        showToast(`Please answer all questions (${unanswered.length} remaining)`, 'error');
+        showQuestion(questions.findIndex(q => !answers[q.id]));
+        return;
+      }
+
+      // Show loading
+      document.getElementById('quizSection').style.display  = 'none';
+      document.getElementById('quizLoading').classList.add('show');
+
+      const payload = {
+        answers: questions.map(q => ({
+          question_id: q.id,
+          value:       answers[q.id].value,
+        })),
+      };
+
+      try {
+        const res  = await apiFetch(`${API}/assess-mood`, {
+          method:  'POST',
+          body:    JSON.stringify(payload),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || 'Assessment failed');
+
+        document.getElementById('quizLoading').classList.remove('show');
+        displayResults(data);
+
+        localStorage.setItem('mf_mood', data.mood);
+        showToast(`Mood assessed: ${data.icon} ${data.label}`, 'success');
+
+      } catch (e) {
+        document.getElementById('quizLoading').classList.remove('show');
+        document.getElementById('quizSection').style.display = 'block';
+        showToast(e.message, 'error');
+      }
+    }
+
+    // ── Display results ───────────────────────────────────────
+    function displayResults(data) {
+      document.getElementById('resultPanel').classList.add('show');
+
+      document.getElementById('resEmoji').textContent    = data.icon    || '😐';
+      document.getElementById('resMoodName').textContent = data.label   || data.mood;
+      document.getElementById('resDesc').textContent     = data.description || '';
+
+      // Score bars (animate after paint)
+      const s = data.scores || {};
+      setTimeout(() => {
+        setBar('barEnergy', 'valEnergy', s.energy  || 0, 10);
+        setBar('barFocus',  'valFocus',  s.focus   || 0, 10);
+        setBar('barStress', 'valStress', s.stress  || 0, 10);
+        const mb = (s.mood_boost || 0) + 5;
+        setBar('barMood', 'valMood', Math.max(0, mb), 10, true);
+      }, 100);
+
+      // Insights
+      const insEl = document.getElementById('insightsList');
+      insEl.innerHTML = (data.insights || []).map(i => `
+        <div class="insight-item">
+          <span class="insight-icon">✦</span>
+          <span>${i}</span>
+        </div>
+      `).join('') || '<div class="insight-item"><span class="insight-icon">✦</span><span>Keep checking in daily to build insights!</span></div>';
+
+      document.getElementById('tipText').textContent = data.tip || '';
+
+      // Recommendations
+      const recs = data.recommendations || [];
+      const urg  = data.urgent_tasks    || [];
+
+      const recEl = document.getElementById('recTasksList');
+      recEl.innerHTML = recs.length
+        ? recs.map(t => renderTaskItem(t)).join('')
+        : '<div class="empty-state"><div class="es-icon">✅</div><p>No pending tasks match your mood — you\'re all caught up!</p></div>';
+
+      if (urg.length) {
+        document.getElementById('urgSection').style.display = 'block';
+        document.getElementById('urgTasksList').innerHTML   = urg.map(t => renderTaskItem(t)).join('');
+      }
+
+      const dur = data.focus_duration || 45;
+      document.getElementById('focusText').textContent =
+        `Based on your mood, we suggest a ${dur}-minute focus session. Visit Focus Mode to start your timer.`;
+    }
+
+    function setBar(fillId, valId, val, max, isMoodBoost = false) {
+      const pct = Math.round((val / max) * 100);
+      document.getElementById(fillId).style.width           = pct + '%';
+      document.getElementById(valId).textContent = isMoodBoost
+        ? (val >= 5 ? `+${val-5}` : `${val-5}`)
+        : `${val}/${max}`;
+    }
+
+    // ── Restart ───────────────────────────────────────────────
+    function restartQuiz() {
+      answers = {};
+      document.getElementById('resultPanel').classList.remove('show');
+      document.getElementById('quizSection').style.display = 'block';
+      showQuestion(0);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // ── Init ──────────────────────────────────────────────────
+    loadQuestions();
+  </script>
+</body>
+</html>
